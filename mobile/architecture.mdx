@@ -6,7 +6,29 @@ icon: 'sitemap'
 
 ## Overview
 
-The Maneged mobile app follows a clean architecture pattern with feature-based modules, local-first data storage, and real-time synchronization.
+The Maneged Flutter app follows a clean, layered architecture pattern:
+
+```mermaid
+graph TB
+    UI[🎨 Presentation Layer<br/>Widgets & Screens]
+    BL[⚙️ Business Logic Layer<br/>Providers & Services]
+    Data[💾 Data Layer<br/>Isar DB & API Client]
+    Local[(📦 Isar Database<br/>Local Storage)]
+    Remote[🌐 Remote API<br/>REST + WebSocket]
+    
+    UI --> BL
+    BL --> Data
+    Data --> Local
+    Data --> Remote
+    Remote -.Real-time Updates.-> BL
+    BL -.State Changes.-> UI
+    
+    style UI fill:#E3F2FD
+    style BL fill:#BBDEFB
+    style Data fill:#90CAF9
+    style Local fill:#64B5F6
+    style Remote fill:#42A5F5
+```
 
 ## Architecture Layers
 

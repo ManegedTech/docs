@@ -10,38 +10,37 @@ Maneged follows a modern client-server architecture with real-time capabilities 
 
 ## High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Client Layer                          │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │   Flutter    │  │   Flutter    │  │   Flutter    │ │
-│  │  Mobile App  │  │  Mobile App  │  │  Mobile App  │ │
-│  │  (User 1)    │  │  (User 2)    │  │  (User 3)    │ │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘ │
-└─────────┼──────────────────┼──────────────────┼─────────┘
-          │                  │                  │
-          │ REST + WebSocket │                  │
-          ▼                  ▼                  ▼
-┌─────────────────────────────────────────────────────────┐
-│                    API Gateway Layer                     │
-│  ┌───────────────────────────────────────────────────┐ │
-│  │          Node.js/Express Backend Server            │ │
-│  │  ┌─────────────┐          ┌──────────────────┐   │ │
-│  │  │  REST API   │          │  WebSocket Server │   │ │
-│  │  │  Endpoints  │          │  (Real-time)      │   │ │
-│  │  └─────────────┘          └──────────────────┘   │ │
-│  └───────────────────────────────────────────────────┘ │
-└────────┬─────────────────────────────┬──────────────────┘
-         │                             │
-         ▼                             ▼
-┌─────────────────┐         ┌──────────────────────┐
-│    Appwrite     │         │      Firebase        │
-│   Backend       │         │  (Push Notifs)       │
-│                 │         │                      │
-│  - Database     │         │  - FCM               │
-│  - Auth         │         │  - Analytics         │
-│  - Storage      │         │                      │
-└─────────────────┘         └──────────────────────┘
+```mermaid
+graph TB
+    subgraph Client["📱 Client Layer"]
+        User1[Flutter Mobile<br/>User 1]
+        User2[Flutter Mobile<br/>User 2]
+        User3[Flutter Mobile<br/>User 3]
+    end
+    
+    subgraph Gateway["🌐 API Gateway Layer"]
+        subgraph Backend["Backend Server"]
+            REST[REST API<br/>Endpoints]
+            WS[WebSocket Server<br/>Real-time]
+        end
+    end
+    
+    subgraph Services["☁️ Services Layer"]
+        Appwrite[Appwrite Backend<br/>• Database<br/>• Auth<br/>• Storage]
+        Firebase[Firebase<br/>• FCM<br/>• Analytics]
+    end
+    
+    User1 -->|REST + WebSocket| Backend
+    User2 -->|REST + WebSocket| Backend
+    User3 -->|REST + WebSocket| Backend
+    
+    Backend --> Appwrite
+    Backend --> Firebase
+    
+    style Client fill:#E8F5E9
+    style Gateway fill:#E3F2FD
+    style Services fill:#FFF3E0
+    style Backend fill:#BBDEFB
 ```
 
 ## System Components
@@ -123,18 +122,23 @@ Maneged follows a modern client-server architecture with real-time capabilities 
 
 ### Message Sending Flow
 
-```
-1. User sends message via Flutter app
-   ↓
-2. Message sent via WebSocket to backend
-   ↓
-3. Backend validates and saves to Appwrite
-   ↓
-4. Backend broadcasts via WebSocket to online users
-   ↓
-5. Backend sends FCM push to offline users
-   ↓
-6. Recipient clients receive and display message
+```mermaid
+graph TB
+    A[1️⃣ User sends message<br/>via Flutter app]
+    B[2️⃣ Message sent via WebSocket<br/>to backend]
+    C[3️⃣ Backend validates and<br/>saves to Appwrite]
+    D[4️⃣ Backend broadcasts via<br/>WebSocket to online users]
+    E[5️⃣ Backend sends FCM push<br/>to offline users]
+    F[6️⃣ Recipient clients receive<br/>and display message]
+    
+    A --> B --> C --> D --> E --> F
+    
+    style A fill:#4CAF50
+    style B fill:#2196F3
+    style C fill:#FF9800
+    style D fill:#9C27B0
+    style E fill:#FFC107
+    style F fill:#4CAF50
 ```
 
 ### Real-time Synchronization
@@ -194,18 +198,25 @@ Used for:
 
 ### Authentication Flow
 
-```
-1. User logs in with email/password or Google
-   ↓
-2. Appwrite validates credentials
-   ↓
-3. Appwrite issues JWT token
-   ↓
-4. Client stores token securely
-   ↓
-5. Token included in all API requests
-   ↓
-6. Backend validates token with Appwrite
+```mermaid
+sequenceDiagram
+    participant User as 👤 User
+    participant Client as Flutter App
+    participant Backend as Backend Server
+    participant Appwrite as Appwrite Auth
+    
+    User->>Client: Login (email/password)
+    Client->>Appwrite: Validate credentials
+    Appwrite->>Appwrite: Check credentials
+    Appwrite-->>Client: JWT Token
+    Client->>Client: Store token securely
+    
+    Note over Client: For all subsequent requests
+    
+    Client->>Backend: API Request + Token
+    Backend->>Appwrite: Validate token
+    Appwrite-->>Backend: User info
+    Backend-->>Client: Response
 ```
 
 ### Authorization Layers
@@ -306,29 +317,51 @@ Used for:
 
 ### Development Environment
 
-```
-localhost:3000 (Backend API)
-├── REST API endpoints
-└── WebSocket server
-
-Flutter Dev App
-├── Debug mode
-└── Hot reload enabled
+```mermaid
+graph LR
+    Backend[localhost:3000<br/>Backend API]
+    REST[REST API endpoints]
+    WS[WebSocket server]
+    Flutter[Flutter Dev App]
+    Debug[Debug mode]
+    Hot[Hot reload enabled]
+    
+    Backend --> REST
+    Backend --> WS
+    Flutter --> Debug
+    Flutter --> Hot
+    
+    style Backend fill:#4CAF50
+    style Flutter fill:#2196F3
 ```
 
 ### Production Environment
 
-```
-https://api.maneged.com
-├── Load Balancer
-├── API Gateway
-├── Backend Instances (2+)
-└── WebSocket Cluster
-
-Mobile Apps
-├── Play Store (Android)
-├── App Store (iOS)
-└── Auto-update system
+```mermaid
+graph TB
+    API[api.maneged.com]
+    LB[Load Balancer]
+    Gateway[API Gateway]
+    B1[Backend Instance 1]
+    B2[Backend Instance 2]
+    WSC[WebSocket Cluster]
+    
+    subgraph Mobile
+        Play[Play Store<br/>Android]
+        AppStore[App Store<br/>iOS]
+        Update[Auto-update system]
+    end
+    
+    API --> LB
+    LB --> Gateway
+    Gateway --> B1
+    Gateway --> B2
+    Gateway --> WSC
+    
+    style API fill:#4CAF50
+    style LB fill:#2196F3
+    style Gateway fill:#FF9800
+    style Mobile fill:#E3F2FD
 ```
 
 ## Future Enhancements

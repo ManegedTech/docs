@@ -36,7 +36,7 @@ The Maneged mobile app is a cross-platform Flutter application that provides tea
 
 ## Features
 
-### ��� Messaging
+### ��� Messaging
 
 - Individual one-on-one chats
 - Group conversations with unlimited members
@@ -47,7 +47,7 @@ The Maneged mobile app is a cross-platform Flutter application that provides tea
 - Read receipts
 - Message search
 
-### ��� Team Management
+### ��� Team Management
 
 - Create and join organizations
 - Role-based permissions (admin, moderator, member)
@@ -55,7 +55,7 @@ The Maneged mobile app is a cross-platform Flutter application that provides tea
 - Member management
 - Join requests and invitations
 
-### ��� Calendar & Events
+### ��� Calendar & Events
 
 - Create and manage events
 - Schedule team meetings
@@ -71,7 +71,7 @@ The Maneged mobile app is a cross-platform Flutter application that provides tea
 - Profile customization
 - Privacy settings
 
-### ��� Platform Support
+### ��� Platform Support
 
 - Android 5.0+ (API 21+)
 - iOS 12.0+
@@ -79,40 +79,62 @@ The Maneged mobile app is a cross-platform Flutter application that provides tea
 
 ## App Architecture
 
-```
-lib/
-├── core/                  # Core functionality
-│   ├── models/           # Data models
-│   ├── services/         # Business logic
-│   ├── theme/            # App theming
-│   ├── utils/            # Helper functions
-│   └── isar_models/      # Local DB models
-├── features/             # Feature modules
-│   ├── auth/            # Authentication
-│   ├── chat/            # Messaging
-│   ├── calendar/        # Events
-│   ├── team/            # Team management
-│   ├── settings/        # App settings
-│   └── main/            # Navigation
-└── main.dart            # Entry point
+```mermaid
+graph TD
+    Main[main.dart<br/>Entry Point]
+    Core[core/<br/>Core Functionality]
+    Features[features/<br/>Feature Modules]
+    
+    Main --> Core
+    Main --> Features
+    
+    Core --> Models[models/<br/>Data Models]
+    Core --> Services[services/<br/>Business Logic]
+    Core --> Theme[theme/<br/>App Theming]
+    Core --> Utils[utils/<br/>Helpers]
+    Core --> IsarModels[isar_models/<br/>DB Schemas]
+    
+    Features --> Auth[auth/<br/>Authentication]
+    Features --> Chat[chat/<br/>Messaging]
+    Features --> Calendar[calendar/<br/>Events]
+    Features --> Team[team/<br/>Team Mgmt]
+    Features --> Settings[settings/<br/>App Settings]
+    Features --> MainNav[main/<br/>Navigation]
+    
+    style Main fill:#4CAF50
+    style Core fill:#2196F3
+    style Features fill:#FF9800
 ```
 
 ## Screen Flow
 
-```
-Splash Screen
-    ↓
-Sign In / Sign Up
-    ↓
-Home (Chat List)
-    ├── Individual Chat
-    ├── Group Chat
-    ├── Calendar
-    ├── Teams
-    └── Settings
-```
-
-## Data Flow
+```mermaid
+graph TB
+    Splash[🚀 Splash Screen]
+    Auth{Authenticated?}
+    SignIn[🔐 Sign In / Sign Up]
+    Home[🏠 Home<br/>Chat List]
+    
+    Splash --> Auth
+    Auth -->|No| SignIn
+    Auth -->|Yes| Home
+    SignIn -->|Success| Home
+    
+    Home --> Individual[💬 Individual Chat]
+    Home --> Group[👥 Group Chat]
+    Home --> Calendar[📅 Calendar]
+    Home --> Teams[🏢 Teams]
+    Home --> Settings[⚙️ Settings]
+    
+    Individual --> ChatView[Chat View]
+    Group --> ChatView
+    Teams --> TeamDetail[Team Details]
+    Calendar --> EventDetail[Event Details]
+    
+    style Splash fill:#4CAF50
+    style Home fill:#2196F3
+    style SignIn fill:#FF9800
+```## Data Flow
 
 ### Local-First Architecture
 
@@ -124,10 +146,26 @@ Home (Chat List)
 
 ### Sync Strategy
 
-```
-User Action → Local Update → UI Update → Server Sync → Confirmation
-                    ↓
-              (Instant Feedback)
+```mermaid
+sequenceDiagram
+    participant User as 👤 User
+    participant UI as UI Layer
+    participant Local as Isar DB
+    participant Sync as Sync Service
+    participant Server as Backend
+    
+    User->>UI: Performs Action
+    UI->>Local: Update Local Data
+    Local-->>UI: Instant Feedback ⚡
+    
+    par Background Sync
+        Sync->>Server: Sync to Server
+        Server-->>Sync: Confirmation
+        Sync->>Local: Update Status
+        Local-->>UI: Confirmed ✓
+    end
+    
+    Note over User,Server: Optimistic UI Updates
 ```
 
 ## Next Steps

@@ -47,45 +47,65 @@ The Maneged backend is a Node.js/Express server that provides REST API endpoints
 
 ## Project Structure
 
-```
-Maneged_Socket/
-├── src/
-│   ├── app.js                    # Express app configuration
-│   ├── index.js                  # Server entry point
-│   ├── handleMessage.js          # WebSocket message handler
-│   ├── controllers/              # Business logic
-│   │   ├── user.controller.js
-│   │   ├── messages.controller.js
-│   │   ├── conversation.controller.js
-│   │   ├── tasks.controller.js
-│   │   └── organization.controllers.js
-│   ├── routes/                   # API route definitions
-│   │   ├── user.routes.js
-│   │   ├── messages.routes.js
-│   │   ├── conversation.routes.js
-│   │   ├── tasks.routes.js
-│   │   └── organization.routes.js
-│   ├── middlewares/              # Request processing
-│   │   ├── verifyUser.middleware.js
-│   │   ├── verifyApiScope.middleware.js
-│   │   ├── multer.middleware.js
-│   │   └── trackApiUsage.middleware.js
-│   ├── utils/                    # Helper functions
-│   │   ├── ApiError.js
-│   │   ├── ApiResponse.js
-│   │   ├── asyncHandler.js
-│   │   ├── Fcm.js
-│   │   └── SocketManager.js
-│   ├── model/                    # Data models
-│   │   └── usermodel.js
-│   └── appwrite/                 # Appwrite integration
-│       └── appwrite.js
-├── public/                       # Static files & docs
-│   ├── docs.html
-│   └── client-socket-manager.js
-├── .env                          # Environment variables
-├── package.json
-└── README.md
+```mermaid
+graph TD
+    Root[Maneged_Socket/]
+    Src[src/]
+    Public[public/]
+    Config[Config Files]
+    
+    Root --> Src
+    Root --> Public
+    Root --> Config
+    
+    Src --> App[app.js]
+    Src --> Index[index.js]
+    Src --> Handler[handleMessage.js]
+    
+    Src --> Controllers[controllers/]
+    Controllers --> UC[user.controller.js]
+    Controllers --> MC[messages.controller.js]
+    Controllers --> CC[conversation.controller.js]
+    Controllers --> TC[tasks.controller.js]
+    Controllers --> OC[organization.controllers.js]
+    
+    Src --> Routes[routes/]
+    Routes --> UR[user.routes.js]
+    Routes --> MR[messages.routes.js]
+    Routes --> CR[conversation.routes.js]
+    Routes --> TR[tasks.routes.js]
+    Routes --> OR[organization.routes.js]
+    
+    Src --> Middleware[middlewares/]
+    Middleware --> VM[verifyUser.middleware.js]
+    Middleware --> SM[verifyApiScope.middleware.js]
+    Middleware --> MM[multer.middleware.js]
+    Middleware --> TM[trackApiUsage.middleware.js]
+    
+    Src --> Utils[utils/]
+    Utils --> AE[ApiError.js]
+    Utils --> AR[ApiResponse.js]
+    Utils --> AH[asyncHandler.js]
+    Utils --> FCM[Fcm.js]
+    Utils --> Sock[SocketManager.js]
+    
+    Src --> Model[model/]
+    Model --> UM[usermodel.js]
+    
+    Src --> AW[appwrite/]
+    AW --> AWC[appwrite.js]
+    
+    Public --> Docs[docs.html]
+    Public --> Client[client-socket-manager.js]
+    
+    Config --> Env[.env]
+    Config --> Pkg[package.json]
+    Config --> Read[README.md]
+    
+    style Root fill:#4CAF50
+    style Src fill:#2196F3
+    style Public fill:#FF9800
+    style Config fill:#9C27B0
 ```
 
 ## Core Modules

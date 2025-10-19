@@ -120,25 +120,27 @@ Maneged is a modern team collaboration platform that combines project management
 
 Maneged uses a modern, scalable architecture:
 
-```
-┌─────────────────┐         ┌─────────────────┐
-│  Flutter Mobile │◄───────►│   Node.js API   │
-│      App        │  REST   │   + WebSocket   │
-└─────────────────┘         └─────────────────┘
-        │                            │
-        │                            │
-        ▼                            ▼
-┌─────────────────┐         ┌─────────────────┐
-│  Isar (Local)   │         │    Appwrite     │
-│    Database     │         │    Database     │
-└─────────────────┘         └─────────────────┘
-        │                            │
-        │                            │
-        ▼                            ▼
-┌─────────────────┐         ┌─────────────────┐
-│    Firebase     │         │   File Storage  │
-│  Push Notifs    │         │   + CDN         │
-└─────────────────┘         └─────────────────┘
+```mermaid
+graph TB
+    Mobile[📱 Flutter Mobile App]
+    Backend[🖥️ Node.js API<br/>+ WebSocket]
+    Local[(💾 Isar<br/>Local Database)]
+    Appwrite[(🗄️ Appwrite<br/>Cloud Database)]
+    Firebase[🔔 Firebase<br/>Push Notifications]
+    Storage[📦 File Storage<br/>+ CDN]
+    
+    Mobile <-->|REST + WS| Backend
+    Mobile --> Local
+    Backend --> Appwrite
+    Backend --> Firebase
+    Backend --> Storage
+    
+    style Mobile fill:#4CAF50
+    style Backend fill:#2196F3
+    style Local fill:#9C27B0
+    style Appwrite fill:#FF9800
+    style Firebase fill:#FFC107
+    style Storage fill:#00BCD4
 ```
 
 ## Support & Community
