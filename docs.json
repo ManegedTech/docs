@@ -4,8 +4,8 @@
   "name": "Maneged",
   "colors": {
     "primary": "#fddb6b",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "light": "#fddb6b",
+    "dark": "#fddb6b"
   },
   "favicon": "/favicon.svg",
   "navigation": {
