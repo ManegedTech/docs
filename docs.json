@@ -7,6 +7,10 @@
     "light": "#fddb6b",
     "dark": "#fddb6b"
   },
+  "modeToggle": {
+  "default": "dark",
+  "isHidden": true
+},
   "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
