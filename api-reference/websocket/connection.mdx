@@ -1,0 +1,127 @@
+---
+title: 'WebSocket Connection'
+description: 'Establish real-time WebSocket connection'
+---
+
+## Connection
+
+Connect to the WebSocket server for real-time updates.
+
+### Endpoint
+
+```
+wss://api.maneged.com/ws
+```
+
+### Authentication
+
+Pass JWT token as query parameter:
+
+```
+wss://api.maneged.com/ws?token=YOUR_JWT_TOKEN
+```
+
+### Connection Example
+
+<CodeGroup>
+```javascript JavaScript
+const ws = new WebSocket('wss://api.maneged.com/ws?token=YOUR_JWT_TOKEN');
+
+ws.onopen = () => {
+  console.log('Connected to Maneged');
+};
+
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log('Received:', data);
+};
+
+ws.onerror = (error) => {
+  console.error('WebSocket error:', error);
+};
+```
+
+```dart Flutter
+import 'package:web_socket_channel/web_socket_channel.dart';
+
+final channel = WebSocketChannel.connect(
+  Uri.parse('wss://api.maneged.com/ws?token=$token'),
+);
+
+channel.stream.listen((message) {
+  final data = jsonDecode(message);
+  print('Received: $data');
+});
+```
+</CodeGroup>
+
+## Connection Events
+
+### CONNECTION_CONFIRMED
+
+Sent by server after successful connection.
+
+```json
+{
+  "type": "CONNECTION_CONFIRMED",
+  "data": {
+    "user_id": "user-123",
+    "session_id": "session-abc"
+  }
+}
+```
+
+### PING/PONG
+
+Heartbeat to keep connection alive.
+
+**Client sends:**
+```json
+{
+  "type": "PING"
+}
+```
+
+**Server responds:**
+```json
+{
+  "type": "PONG",
+  "timestamp": "2025-01-19T10:00:00.000Z"
+}
+```
+
+<Note>
+  Send PING every 30 seconds to maintain connection.
+</Note>
+
+## Multi-Session Support
+
+Users can have multiple active sessions. Each connection receives a unique `session_id`.
+
+All events are broadcasted to all user's active sessions.
+
+## Error Handling
+
+### Connection Errors
+
+```json
+{
+  "type": "ERROR",
+  "message": "Invalid token",
+  "code": "AUTH_FAILED"
+}
+```
+
+Common error codes:
+- `AUTH_FAILED` - Invalid or expired token
+- `RATE_LIMIT` - Too many requests
+- `INVALID_MESSAGE` - Malformed message format
+
+## Best Practices
+
+1. **Reconnection Logic**: Implement exponential backoff for reconnection attempts
+2. **Heartbeat**: Send PING every 30 seconds
+3. **Message Queue**: Queue messages when connection is lost
+4. **Error Recovery**: Handle disconnections gracefully
+
+See [Backend WebSocket Documentation](/backend/websocket) for complete event reference.

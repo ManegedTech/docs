@@ -1,0 +1,177 @@
+---
+title: 'Mobile Installation'
+description: 'Install and set up the Maneged Flutter mobile app'
+icon: 'download'
+---
+
+## Prerequisites
+
+<CardGroup cols={3}>
+  <Card title="Flutter 3.16+" icon="mobile">
+    [Install Flutter](https://flutter.dev/docs/get-started/install)
+  </Card>
+  <Card title="Dart 3.2+" icon="code">
+    Included with Flutter SDK
+  </Card>
+  <Card title="IDE" icon="laptop-code">
+    VS Code or Android Studio
+  </Card>
+</CardGroup>
+
+## Installation
+
+### Step 1: Clone Repository
+
+```bash
+git clone https://github.com/Aryanutkarsh/Maneged_Android.git
+cd maneged_mobile
+```
+
+### Step 2: Install Dependencies
+
+```bash
+flutter pub get
+```
+
+### Step 3: Configure Environment
+
+Create `.env.local` file in the root:
+
+```bash
+# Appwrite Configuration
+APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+APPWRITE_PROJECT_ID=your_project_id
+APPWRITE_DATABASE_ID=your_database_id
+
+# Collections
+COLLECTION_USERS=users
+COLLECTION_MESSAGES=messages
+COLLECTION_CONVERSATIONS=conversations
+COLLECTION_ORGANIZATIONS=organizations
+
+# Backend API
+API_URL=http://localhost:3000
+WEBSOCKET_URL=ws://localhost:3000
+```
+
+<Note>
+  For Android emulator, use `10.0.2.2:3000` instead of `localhost:3000`
+</Note>
+
+### Step 4: Configure Firebase
+
+1. Add `google-services.json` to `android/app/`
+2. Add `GoogleService-Info.plist` to `ios/Runner/`
+3. Run `flutterfire configure` if needed
+
+### Step 5: Run the App
+
+```bash
+# Debug mode
+flutter run
+
+# Release mode
+flutter run --release
+```
+
+## Platform-Specific Setup
+
+<Tabs>
+  <Tab title="Android">
+    ### Android Configuration
+    
+    Minimum SDK: API 21 (Android 5.0)
+    
+    Update `android/app/build.gradle`:
+    
+    ```gradle
+    android {
+        compileSdkVersion 34
+        defaultConfig {
+            applicationId "com.maneged.app"
+            minSdkVersion 21
+            targetSdkVersion 34
+        }
+    }
+    ```
+    
+    ### Build APK
+    
+    ```bash
+    flutter build apk --release
+    ```
+    
+    ### Build App Bundle
+    
+    ```bash
+    flutter build appbundle --release
+    ```
+  </Tab>
+  
+  <Tab title="iOS">
+    ### iOS Configuration
+    
+    Minimum iOS: 12.0
+    
+    Update `ios/Podfile`:
+    
+    ```ruby
+    platform :ios, '12.0'
+    ```
+    
+    ### Install Pods
+    
+    ```bash
+    cd ios && pod install && cd ..
+    ```
+    
+    ### Build IPA
+    
+    ```bash
+    flutter build ios --release
+    ```
+  </Tab>
+</Tabs>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Flutter build fails">
+    ```bash
+    flutter clean
+    flutter pub get
+    flutter run
+    ```
+  </Accordion>
+  
+  <Accordion title="WebSocket connection fails">
+    - Use `10.0.2.2:3000` for Android emulator
+    - Use `localhost:3000` for iOS simulator
+    - Check backend server is running
+  </Accordion>
+  
+  <Accordion title="Firebase initialization error">
+    - Verify `google-services.json` location
+    - Ensure package name matches
+    - Run `flutterfire configure`
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Architecture"
+    icon="sitemap"
+    href="/mobile/architecture"
+  >
+    Understand app architecture
+  </Card>
+  <Card
+    title="Features"
+    icon="list"
+    href="/mobile/features"
+  >
+    Explore app features
+  </Card>
+</CardGroup>

@@ -1,0 +1,54 @@
+---
+title: 'Join Organization Request'
+api: 'POST /v1/organization/join-request'
+description: 'Request to join an organization'
+---
+
+## Endpoint
+
+```
+POST /v1/organization/join-request
+```
+
+## Authentication
+
+Requires user token.
+
+## Request Body
+
+<ParamField body="organization" type="string" required>
+  Organization ID to join
+</ParamField>
+
+<ParamField body="message" type="string">
+  Optional message to organization admins
+</ParamField>
+
+## Example Request
+
+```bash
+curl -X POST \
+  -H "x-api-key: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "organization": "org-123",
+    "message": "I would like to join your team"
+  }' \
+  https://api.maneged.com/v1/organization/join-request
+```
+
+## Response
+
+```json
+{
+  "status": 201,
+  "success": true,
+  "data": {
+    "type": "JOIN",
+    "organization_Id": "org-123",
+    "user": "user-456",
+    "message": "I would like to join your team",
+    "status": "PENDING"
+  }
+}
+```

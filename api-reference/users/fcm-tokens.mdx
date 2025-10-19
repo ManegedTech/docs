@@ -1,0 +1,81 @@
+---
+title: 'Manage FCM Tokens'
+api: 'POST /v1/user/fcm'
+description: 'Add or remove Firebase Cloud Messaging tokens for push notifications'
+---
+
+## Add FCM Token
+
+Add a Firebase Cloud Messaging token for push notifications.
+
+### Endpoint
+
+```
+POST /v1/user/fcm
+```
+
+### Request Body
+
+<ParamField body="token" type="string" required>
+  FCM token from Firebase SDK
+</ParamField>
+
+<ParamField body="device_id" type="string">
+  Optional device identifier
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST \
+  -H "x-api-key: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"token": "fcm-token-here"}' \
+  https://api.maneged.com/v1/user/fcm
+```
+
+### Response
+
+```json
+{
+  "status": 200,
+  "success": true,
+  "message": "FCM token added successfully"
+}
+```
+
+## Remove FCM Token
+
+Remove a Firebase Cloud Messaging token.
+
+### Endpoint
+
+```
+DELETE /v1/user/fcm
+```
+
+### Request Body
+
+<ParamField body="token" type="string" required>
+  FCM token to remove
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE \
+  -H "x-api-key: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"token": "fcm-token-here"}' \
+  https://api.maneged.com/v1/user/fcm
+```
+
+### Response
+
+```json
+{
+  "status": 200,
+  "success": true,
+  "message": "FCM token removed successfully"
+}
+```

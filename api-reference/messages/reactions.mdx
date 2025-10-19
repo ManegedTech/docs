@@ -1,0 +1,88 @@
+---
+title: 'Message Reactions'
+api: 'POST /v1/message/reaction'
+description: 'Add or remove reactions to messages'
+---
+
+## Add Reaction
+
+Add an emoji reaction to a message.
+
+### Endpoint
+
+```
+POST /v1/message/reaction
+```
+
+### Request Body
+
+<ParamField body="message" type="string" required>
+  Message ID
+</ParamField>
+
+<ParamField body="reaction" type="string" required>
+  Emoji reaction (e.g., "👍", "❤️", "😂")
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST \
+  -H "x-api-key: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "msg-789",
+    "reaction": "👍"
+  }' \
+  https://api.maneged.com/v1/message/reaction
+```
+
+### Response
+
+```json
+{
+  "status": 201,
+  "success": true,
+  "data": {
+    "$id": "reaction-123",
+    "message": "msg-789",
+    "user": "user-123",
+    "reaction": "👍",
+    "created_at": "2025-01-19T10:00:00.000Z"
+  }
+}
+```
+
+## Remove Reaction
+
+Remove a reaction from a message.
+
+### Endpoint
+
+```
+DELETE /v1/message/reaction/:id
+```
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  Reaction ID
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE \
+  -H "x-api-key: Bearer YOUR_TOKEN" \
+  https://api.maneged.com/v1/message/reaction/reaction-123
+```
+
+### Response
+
+```json
+{
+  "status": 200,
+  "success": true,
+  "message": "Reaction removed successfully"
+}
+```

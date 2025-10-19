@@ -15,58 +15,93 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
             "pages": [
               "index",
               "quickstart",
-              "development"
+              "architecture"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Backend Server",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "backend/introduction",
+              "backend/installation",
+              "backend/authentication",
+              "backend/websocket"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Mobile App",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "mobile/introduction",
+              "mobile/installation",
+              "mobile/architecture",
+              "mobile/features"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "REST API",
             "pages": [
-              "api-reference/introduction"
+              "api-reference/introduction",
+              "api-reference/authentication"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "User Management",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/users/get-profile",
+              "api-reference/users/update-profile",
+              "api-reference/users/fcm-tokens"
+            ]
+          },
+          {
+            "group": "Organizations",
+            "pages": [
+              "api-reference/organizations/create",
+              "api-reference/organizations/join-request",
+              "api-reference/organizations/search",
+              "api-reference/organizations/members"
+            ]
+          },
+          {
+            "group": "Conversations",
+            "pages": [
+              "api-reference/conversations/list",
+              "api-reference/conversations/create",
+              "api-reference/conversations/get"
+            ]
+          },
+          {
+            "group": "Messages",
+            "pages": [
+              "api-reference/messages/send",
+              "api-reference/messages/list",
+              "api-reference/messages/reactions"
+            ]
+          },
+          {
+            "group": "Tasks",
+            "pages": [
+              "api-reference/tasks/create",
+              "api-reference/tasks/update",
+              "api-reference/tasks/list"
+            ]
+          },
+          {
+            "group": "WebSocket Events",
+            "pages": [
+              "api-reference/websocket/connection",
+              "api-reference/websocket/presence",
+              "api-reference/websocket/messages"
             ]
           }
         ]
@@ -75,14 +110,14 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
+          "anchor": "GitHub",
+          "href": "https://github.com/manegedtech",
+          "icon": "github"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "Support",
+          "href": "mailto:support@maneged.com",
+          "icon": "envelope"
         }
       ]
     }

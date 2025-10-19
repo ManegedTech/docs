@@ -1,0 +1,436 @@
+---
+title: 'Backend Introduction'
+description: 'Overview of the Maneged Node.js backend server'
+icon: 'server'
+---
+
+## Overview
+
+The Maneged backend is a Node.js/Express server that provides REST API endpoints and WebSocket connections for real-time communication. It serves as the central hub for all client applications, handling authentication, data persistence, and real-time message delivery.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="REST API" icon="route">
+    Complete CRUD operations for all resources with RESTful conventions
+  </Card>
+  <Card title="WebSocket Server" icon="bolt">
+    Real-time bidirectional communication for instant messaging
+  </Card>
+  <Card title="API Scope System" icon="key">
+    Fine-grained access control with scope-based permissions
+  </Card>
+  <Card title="Push Notifications" icon="bell">
+    Firebase Cloud Messaging integration for offline users
+  </Card>
+</CardGroup>
+
+## Technology Stack
+
+### Core Dependencies
+
+```json
+{
+  "express": "^5.1.0",
+  "ws": "^8.18.3",
+  "node-appwrite": "^18.0.0",
+  "dotenv": "^17.2.1",
+  "multer": "^2.0.2"
+}
+```
+
+### Runtime
+
+- **Node.js**: 16.x or higher
+- **Module System**: ES Modules (type: "module")
+- **Package Manager**: npm or yarn
+
+## Project Structure
+
+```
+Maneged_Socket/
+├── src/
+│   ├── app.js                    # Express app configuration
+│   ├── index.js                  # Server entry point
+│   ├── handleMessage.js          # WebSocket message handler
+│   ├── controllers/              # Business logic
+│   │   ├── user.controller.js
+│   │   ├── messages.controller.js
+│   │   ├── conversation.controller.js
+│   │   ├── tasks.controller.js
+│   │   └── organization.controllers.js
+│   ├── routes/                   # API route definitions
+│   │   ├── user.routes.js
+│   │   ├── messages.routes.js
+│   │   ├── conversation.routes.js
+│   │   ├── tasks.routes.js
+│   │   └── organization.routes.js
+│   ├── middlewares/              # Request processing
+│   │   ├── verifyUser.middleware.js
+│   │   ├── verifyApiScope.middleware.js
+│   │   ├── multer.middleware.js
+│   │   └── trackApiUsage.middleware.js
+│   ├── utils/                    # Helper functions
+│   │   ├── ApiError.js
+│   │   ├── ApiResponse.js
+│   │   ├── asyncHandler.js
+│   │   ├── Fcm.js
+│   │   └── SocketManager.js
+│   ├── model/                    # Data models
+│   │   └── usermodel.js
+│   └── appwrite/                 # Appwrite integration
+│       └── appwrite.js
+├── public/                       # Static files & docs
+│   ├── docs.html
+│   └── client-socket-manager.js
+├── .env                          # Environment variables
+├── package.json
+└── README.md
+```
+
+## Core Modules
+
+### 1. Express Application (app.js)
+
+Configures the Express application with middleware and routes:
+
+```javascript
+import express from 'express';
+import cors from 'cors';
+
+const app = express();
+
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
+
+// Routes
+app.use('/v1/user', userRoutes);
+app.use('/v1/messages', messagesRoutes);
+app.use('/v1/conversations', conversationRoutes);
+// ... more routes
+
+export default app;
+```
+
+### 2. WebSocket Server (index.js)
+
+Manages WebSocket connections for real-time features:
+
+```javascript
+import { WebSocketServer } from 'ws';
+import { SocketManager } from './utils/SocketManager.js';
+
+const wss = new WebSocketServer({ server });
+const socketManager = new SocketManager();
+
+wss.on('connection', (ws, req) => {
+  // Handle new connections
+  socketManager.addClient(userId, ws);
+  
+  ws.on('message', (data) => {
+    // Handle messages
+    handleMessage(data, ws);
+  });
+  
+  ws.on('close', () => {
+    // Handle disconnections
+    socketManager.removeClient(userId);
+  });
+});
+```
+
+### 3. Message Handler (handleMessage.js)
+
+Processes WebSocket messages with different methods:
+
+```javascript
+export async function handleMessage(data, ws) {
+  const message = JSON.parse(data);
+  
+  switch(message.method) {
+    case 'SEND':
+      await handleSendMessage(message, ws);
+      break;
+    case 'GET_USER_STATUS':
+      await handleUserStatus(message, ws);
+      break;
+    case 'READED':
+      await handleMarkAsRead(message, ws);
+      break;
+    // ... more methods
+  }
+}
+```
+
+## API Routes
+
+### User Management
+
+```javascript
+router.route("/profile").get(verifyUser, getProfile);
+router.route("/me").get(verifyUser, getCurrentUser);
+router.route("/fcm").post(verifyUser, addFCMToken);
+router.route("/device").post(verifyUser, addDevice);
+```
+
+### Messaging
+
+```javascript
+router.route("/").get(verifyUser, getMessages);
+router.route("/send").post(verifyUser, upload.single("attachment"), sendMessage);
+router.route("/reactions").post(verifyUser, addReaction);
+router.route("/mark-as-received").post(verifyUser, markAsReceived);
+```
+
+### Conversations
+
+```javascript
+router.route("/").get(verifyUser, getConversations);
+router.route("/create").post(verifyUser, createConversation);
+router.route("/individual").get(verifyUser, getIndividualChats);
+router.route("/team").get(verifyUser, getTeamChats);
+```
+
+### Tasks
+
+```javascript
+router.route("/create").post(verifyUser, createTask);
+router.route("/update").post(verifyUser, updateTask);
+router.route("/complete").post(verifyUser, markTaskAsCompleted);
+router.route("/").get(verifyUser, getTasks);
+```
+
+### Organizations
+
+```javascript
+router.route("/create").post(verifyUser, createOrganization);
+router.route("/join-request").post(verifyUser, joinRequest);
+router.route("/search").get(verifyUser, searchOrganizations);
+router.route("/members").get(verifyUser, getAllMembers);
+```
+
+## Middleware System
+
+### Authentication Middleware
+
+Verifies user tokens and attaches user data to requests:
+
+```javascript
+export default async function verifyUser(req, res, next) {
+  try {
+    const token = req.headers['x-api-key'];
+    
+    if (!token) {
+      throw new ApiError(401, 'Authentication required');
+    }
+    
+    // Verify with Appwrite
+    const user = await getUserFromToken(token);
+    req.user = user;
+    
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+```
+
+### API Scope Middleware
+
+Validates API key scopes for fine-grained permissions:
+
+```javascript
+export function verifyApiScope(requiredScopes) {
+  return async (req, res, next) => {
+    const apiKey = req.headers['x-api-key'];
+    const scopes = await getApiKeyScopes(apiKey);
+    
+    if (!hasRequiredScopes(scopes, requiredScopes)) {
+      throw new ApiError(403, 'Insufficient permissions');
+    }
+    
+    next();
+  };
+}
+```
+
+### File Upload Middleware
+
+Handles file uploads with Multer:
+
+```javascript
+import multer from 'multer';
+
+export const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    // Validate file types
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type'), false);
+    }
+  }
+});
+```
+
+## Appwrite Integration
+
+### Client Setup
+
+```javascript
+import { Client, Databases, Account, Storage } from 'node-appwrite';
+
+const client = new Client()
+  .setEndpoint(process.env.APPWRITE_ENDPOINT)
+  .setProject(process.env.APPWRITE_PROJECT_ID)
+  .setKey(process.env.APPWRITE_API_KEY);
+
+export const databases = new Databases(client);
+export const account = new Account(client);
+export const storage = new Storage(client);
+```
+
+### Database Operations
+
+```javascript
+// Create document
+await databases.createDocument(
+  databaseId,
+  collectionId,
+  documentId,
+  data
+);
+
+// List documents with queries
+await databases.listDocuments(
+  databaseId,
+  collectionId,
+  [
+    Query.equal('userId', userId),
+    Query.limit(25),
+    Query.orderDesc('$createdAt')
+  ]
+);
+```
+
+## Error Handling
+
+### Custom Error Class
+
+```javascript
+export class ApiError extends Error {
+  constructor(statusCode, message) {
+    super(message);
+    this.statusCode = statusCode;
+    this.success = false;
+  }
+}
+```
+
+### Global Error Handler
+
+```javascript
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal Server Error';
+  
+  res.status(statusCode).json({
+    success: false,
+    status: statusCode,
+    message: message
+  });
+});
+```
+
+## Response Format
+
+### Success Response
+
+```javascript
+export class ApiResponse {
+  constructor(statusCode, data, message = 'Success') {
+    this.statusCode = statusCode;
+    this.data = data;
+    this.message = message;
+    this.success = true;
+  }
+}
+
+// Usage
+res.status(200).json(new ApiResponse(200, userData, 'Profile fetched'));
+```
+
+### Error Response
+
+```json
+{
+  "success": false,
+  "status": 404,
+  "message": "User not found"
+}
+```
+
+## Environment Configuration
+
+Required environment variables:
+
+```bash
+# Appwrite
+APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+APPWRITE_PROJECT_ID=your_project_id
+APPWRITE_API_KEY=your_api_key
+APPWRITE_DATABASE_ID=your_database_id
+
+# Collections
+COLLECTION_USERS=users
+COLLECTION_MESSAGES=messages
+COLLECTION_CONVERSATIONS=conversations
+COLLECTION_ORGANIZATIONS=organizations
+COLLECTION_TASKS=tasks
+COLLECTION_MESSAGE_REACTIONS=message_reactions
+COLLECTION_ACTIONS=actions
+
+# Server
+PORT=3000
+NODE_ENV=development
+
+# Firebase (for push notifications)
+FIREBASE_SERVICE_ACCOUNT_PATH=./firebase-admin-sdk.json
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Installation Guide"
+    icon="download"
+    href="/backend/installation"
+  >
+    Set up the backend server
+  </Card>
+  <Card
+    title="Authentication"
+    icon="lock"
+    href="/backend/authentication"
+  >
+    Learn about auth and API keys
+  </Card>
+  <Card
+    title="WebSocket API"
+    icon="bolt"
+    href="/backend/websocket"
+  >
+    Real-time communication docs
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/introduction"
+  >
+    Complete API documentation
+  </Card>
+</CardGroup>

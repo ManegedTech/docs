@@ -1,55 +1,212 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: 'Quick Start Guide'
+description: 'Get Maneged up and running in under 10 minutes'
+icon: 'rocket'
 ---
 
-## Get started in three steps
+## Overview
 
-Get your documentation site running locally and make your first customization.
+This guide will help you set up both the Maneged backend server and mobile app for development. By the end, you'll have a fully functional local environment with real-time messaging capabilities.
 
-### Step 1: Set up your local environment
+<Note>
+  **Prerequisites**: Ensure you have Node.js 16+, Flutter 3.16+, and Git installed on your system.
+</Note>
+
+## Backend Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/manegedtech/Maneged_Socket.git
+cd Maneged_Socket
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Configure Environment Variables
+
+Create a `.env` file in the root directory:
+
+```bash
+# Appwrite Configuration
+APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+APPWRITE_PROJECT_ID=your_project_id
+APPWRITE_API_KEY=your_api_key
+APPWRITE_DATABASE_ID=your_database_id
+
+# Collections
+COLLECTION_USERS=users
+COLLECTION_MESSAGES=messages
+COLLECTION_CONVERSATIONS=conversations
+COLLECTION_ORGANIZATIONS=organizations
+COLLECTION_TASKS=tasks
+
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# Firebase Admin SDK (for push notifications)
+FIREBASE_SERVICE_ACCOUNT_PATH=./firebase-admin-sdk.json
+```
+
+<Tip>
+  Get your Appwrite credentials from the [Appwrite Console](https://cloud.appwrite.io/console). Create a new project if you haven't already.
+</Tip>
+
+### 4. Start the Server
+
+```bash
+npm start
+```
+
+The server will start on `http://localhost:3000`. You should see:
+
+```
+🚀 Server running on port 3000
+📡 WebSocket server ready
+✅ Connected to Appwrite
+```
+
+## Mobile App Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Aryanutkarsh/Maneged_Android.git
+cd maneged_mobile
+```
+
+### 2. Install Flutter Dependencies
+
+```bash
+flutter pub get
+```
+
+### 3. Configure Environment Variables
+
+Create a `.env.local` file in the root directory:
+
+```bash
+# Appwrite Configuration
+APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+APPWRITE_PROJECT_ID=your_project_id
+APPWRITE_DATABASE_ID=your_database_id
+
+# Collections (must match backend)
+COLLECTION_USERS=users
+COLLECTION_MESSAGES=messages
+COLLECTION_CONVERSATIONS=conversations
+COLLECTION_ORGANIZATIONS=organizations
+
+# Backend API
+API_URL=http://localhost:3000
+WEBSOCKET_URL=ws://localhost:3000
+```
+
+### 4. Run the App
+
+Connect a device or start an emulator, then run:
+
+```bash
+flutter run
+```
+
+## Verify Installation
+
+### Test Backend API
+
+Test the health endpoint:
+
+```bash
+curl http://localhost:3000/health
+```
+
+Expected response:
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-01-19T10:00:00.000Z"
+}
+```
+
+### Test Mobile App
+
+1. Sign up with a new account
+2. Create or join an organization
+3. Send a test message
+4. Verify real-time delivery
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Backend Documentation"
+    icon="server"
+    href="/backend/introduction"
+  >
+    Learn about backend architecture and features
+  </Card>
+  <Card
+    title="Mobile Documentation"
+    icon="mobile"
+    href="/mobile/introduction"
+  >
+    Explore mobile app features and architecture
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/introduction"
+  >
+    Complete API and WebSocket documentation
+  </Card>
+  <Card
+    title="Authentication"
+    icon="lock"
+    href="/backend/authentication"
+  >
+    Set up authentication and API keys
+  </Card>
+</CardGroup>
+
+## Troubleshooting
 
 <AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
+  <Accordion title="Backend won't start">
+    - Check that all environment variables are set correctly
+    - Verify Appwrite credentials and project ID
+    - Ensure port 3000 is not already in use
+    - Check Node.js version (16+ required)
   </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
+
+  <Accordion title="Mobile app build fails">
+    - Run `flutter clean` and `flutter pub get`
+    - Check Flutter version: `flutter --version` (3.16+ required)
+    - Verify `google-services.json` is in the correct location
+    - Ensure Android SDK is properly installed
+  </Accordion>
+
+  <Accordion title="WebSocket connection fails">
+    - Verify the backend server is running
+    - Check the WebSocket URL in mobile app `.env.local`
+    - For Android emulator, use `10.0.2.2:3000` instead of `localhost:3000`
+    - Check firewall settings
   </Accordion>
 </AccordionGroup>
 
-### Step 2: Deploy your changes
+## Development Tips
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+<Tip>
+  **Use the Developer Page**: The mobile app includes a built-in developer page (`Settings > Developer Tools`) with connection diagnostics and testing tools.
+</Tip>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+<Warning>
+  **Production Deployment**: Before deploying to production, update all security credentials, enable HTTPS/WSS, and configure proper CORS policies.
+</Warning>
 
 ## Next steps
 

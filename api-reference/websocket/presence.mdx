@@ -1,0 +1,193 @@
+---
+title: 'Presence & Status'
+description: 'User presence and online status events'
+---
+
+## User Status Events
+
+Track user online/offline status in real-time.
+
+### Get User Status
+
+Query online status of specific users.
+
+**Client sends:**
+```json
+{
+  "type": "GET_USER_STATUS",
+  "data": {
+    "user_ids": ["user-456", "user-789"]
+  }
+}
+```
+
+**Server responds:**
+```json
+{
+  "type": "USER_STATUS",
+  "data": {
+    "users": [
+      {
+        "user_id": "user-456",
+        "status": "ONLINE",
+        "last_seen": "2025-01-19T10:00:00.000Z"
+      },
+      {
+        "user_id": "user-789",
+        "status": "OFFLINE",
+        "last_seen": "2025-01-19T09:30:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+### Get Online Users
+
+Get all currently online users in an organization.
+
+**Client sends:**
+```json
+{
+  "type": "GET_ONLINE_USERS",
+  "data": {
+    "organizationId": "org-123"
+  }
+}
+```
+
+**Server responds:**
+```json
+{
+  "type": "ONLINE_USERS",
+  "data": {
+    "users": [
+      {
+        "user_id": "user-456",
+        "name": "Jane Smith",
+        "status": "ONLINE"
+      }
+    ],
+    "count": 1
+  }
+}
+```
+
+## Status Updates
+
+Receive automatic status updates when users go online/offline.
+
+### User Online
+
+```json
+{
+  "type": "USER_ONLINE",
+  "data": {
+    "user_id": "user-456",
+    "timestamp": "2025-01-19T10:00:00.000Z"
+  }
+}
+```
+
+### User Offline
+
+```json
+{
+  "type": "USER_OFFLINE",
+  "data": {
+    "user_id": "user-456",
+    "last_seen": "2025-01-19T10:30:00.000Z"
+  }
+}
+```
+
+## Typing Indicators
+
+Show when users are typing in a conversation.
+
+### Start Typing
+
+**Client sends:**
+```json
+{
+  "type": "TYPING_START",
+  "data": {
+    "conversation": "conv-123"
+  }
+}
+```
+
+**Other participants receive:**
+```json
+{
+  "type": "USER_TYPING",
+  "data": {
+    "conversation": "conv-123",
+    "user_id": "user-456",
+    "user_name": "Jane Smith"
+  }
+}
+```
+
+### Stop Typing
+
+**Client sends:**
+```json
+{
+  "type": "TYPING_STOP",
+  "data": {
+    "conversation": "conv-123"
+  }
+}
+```
+
+## Presence Best Practices
+
+1. **Debounce Typing**: Send typing events max once per 3 seconds
+2. **Clear Typing**: Auto-clear typing indicators after 5 seconds
+3. **Status Caching**: Cache user status locally to reduce queries
+4. **Selective Queries**: Only query status for visible users
+
+## Example Implementation
+
+<CodeGroup>
+```javascript JavaScript
+// Track typing state
+let typingTimeout;
+
+function onTyping(conversationId) {
+  ws.send(JSON.stringify({
+    type: 'TYPING_START',
+    data: { conversation: conversationId }
+  }));
+  
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    ws.send(JSON.stringify({
+      type: 'TYPING_STOP',
+      data: { conversation: conversationId }
+    }));
+  }, 3000);
+}
+```
+
+```dart Flutter
+// Presence provider
+class PresenceProvider with ChangeNotifier {
+  final Map<String, UserStatus> _statuses = {};
+  
+  void updateStatus(String userId, String status) {
+    _statuses[userId] = UserStatus(
+      userId: userId,
+      status: status,
+      lastSeen: DateTime.now(),
+    );
+    notifyListeners();
+  }
+  
+  bool isOnline(String userId) {
+    return _statuses[userId]?.status == 'ONLINE';
+  }
+}
+```
+</CodeGroup>

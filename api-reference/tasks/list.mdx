@@ -1,0 +1,82 @@
+---
+title: 'List Tasks'
+api: 'GET /v1/tasks'
+description: 'Get all tasks for authenticated user'
+---
+
+## Endpoint
+
+```
+GET /v1/tasks
+```
+
+## Authentication
+
+Requires user token or API key with `read:tasks` scope.
+
+## Query Parameters
+
+<ParamField query="organizationId" type="string">
+  Filter by organization ID
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter by status: "PENDING", "IN_PROGRESS", "COMPLETED"
+</ParamField>
+
+<ParamField query="priority" type="string">
+  Filter by priority: "LOW", "MEDIUM", "HIGH", "URGENT"
+</ParamField>
+
+<ParamField query="assigned_to_me" type="boolean">
+  Show only tasks assigned to current user (default: false)
+</ParamField>
+
+<ParamField query="limit" type="number">
+  Number of results (default: 25, max: 100)
+</ParamField>
+
+<ParamField query="offset" type="number">
+  Pagination offset (default: 0)
+</ParamField>
+
+## Example Request
+
+```bash
+curl -X GET \
+  -H "x-api-key: Bearer YOUR_TOKEN" \
+  "https://api.maneged.com/v1/tasks?status=PENDING&priority=HIGH&limit=20"
+```
+
+## Response
+
+```json
+{
+  "status": 200,
+  "success": true,
+  "data": {
+    "tasks": [
+      {
+        "$id": "task-123",
+        "title": "Complete documentation",
+        "description": "Write API docs",
+        "due_date": "2025-01-25T00:00:00.000Z",
+        "priority": "HIGH",
+        "status": "PENDING",
+        "assigned_to": [
+          {
+            "$id": "user-456",
+            "name": "Jane Smith"
+          }
+        ],
+        "created_by": {
+          "$id": "user-123",
+          "name": "John Doe"
+        },
+        "created_at": "2025-01-19T10:00:00.000Z"
+      }
+    ],
+    "total": 1
+  }
+}
+```

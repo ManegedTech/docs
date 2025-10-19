@@ -1,0 +1,385 @@
+---
+title: 'System Architecture'
+description: 'Understanding Maneged architecture and design principles'
+icon: 'sitemap'
+---
+
+## Overview
+
+Maneged follows a modern client-server architecture with real-time capabilities powered by WebSocket connections. The system is designed for scalability, reliability, and real-time collaboration.
+
+## High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Client Layer                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
+│  │   Flutter    │  │   Flutter    │  │   Flutter    │ │
+│  │  Mobile App  │  │  Mobile App  │  │  Mobile App  │ │
+│  │  (User 1)    │  │  (User 2)    │  │  (User 3)    │ │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘ │
+└─────────┼──────────────────┼──────────────────┼─────────┘
+          │                  │                  │
+          │ REST + WebSocket │                  │
+          ▼                  ▼                  ▼
+┌─────────────────────────────────────────────────────────┐
+│                    API Gateway Layer                     │
+│  ┌───────────────────────────────────────────────────┐ │
+│  │          Node.js/Express Backend Server            │ │
+│  │  ┌─────────────┐          ┌──────────────────┐   │ │
+│  │  │  REST API   │          │  WebSocket Server │   │ │
+│  │  │  Endpoints  │          │  (Real-time)      │   │ │
+│  │  └─────────────┘          └──────────────────┘   │ │
+│  └───────────────────────────────────────────────────┘ │
+└────────┬─────────────────────────────┬──────────────────┘
+         │                             │
+         ▼                             ▼
+┌─────────────────┐         ┌──────────────────────┐
+│    Appwrite     │         │      Firebase        │
+│   Backend       │         │  (Push Notifs)       │
+│                 │         │                      │
+│  - Database     │         │  - FCM               │
+│  - Auth         │         │  - Analytics         │
+│  - Storage      │         │                      │
+└─────────────────┘         └──────────────────────┘
+```
+
+## System Components
+
+### 1. Mobile Client (Flutter)
+
+**Technology Stack:**
+- Flutter 3.16+
+- Dart 3.2+
+- Provider for state management
+- Isar for local database
+
+**Responsibilities:**
+- User interface and interaction
+- Local data caching with Isar
+- WebSocket connection management
+- Offline-first data sync
+- Push notification handling
+
+**Key Features:**
+- Offline support with automatic sync
+- Real-time UI updates
+- Message queueing for offline messages
+- Connection health monitoring
+
+### 2. Backend Server (Node.js)
+
+**Technology Stack:**
+- Node.js (ES Modules)
+- Express.js 5.x
+- WebSocket (ws library)
+- Appwrite SDK
+
+**Responsibilities:**
+- REST API endpoints
+- WebSocket server for real-time features
+- Authentication and authorization
+- Business logic and validation
+- Push notification delivery via FCM
+
+**Architecture Pattern:**
+- MVC (Model-View-Controller)
+- Middleware-based request processing
+- Service layer for business logic
+
+### 3. Database Layer (Appwrite)
+
+**Collections:**
+- `users` - User profiles and settings
+- `organizations` - Company/team data
+- `conversations` - Chat rooms
+- `messages` - Chat messages
+- `message_reactions` - Emoji reactions
+- `tasks` - Task management
+- `schedules` - Calendar events
+- `notifications` - User notifications
+
+**Features:**
+- Real-time subscriptions
+- Relationships and indexes
+- Role-based access control
+- File storage with CDN
+
+### 4. Push Notifications (Firebase)
+
+**Services:**
+- Firebase Cloud Messaging (FCM)
+- Firebase Analytics
+- Crash Reporting
+
+**Notification Types:**
+- New messages
+- Mentions
+- Task assignments
+- Schedule reminders
+- System notifications
+
+## Data Flow
+
+### Message Sending Flow
+
+```
+1. User sends message via Flutter app
+   ↓
+2. Message sent via WebSocket to backend
+   ↓
+3. Backend validates and saves to Appwrite
+   ↓
+4. Backend broadcasts via WebSocket to online users
+   ↓
+5. Backend sends FCM push to offline users
+   ↓
+6. Recipient clients receive and display message
+```
+
+### Real-time Synchronization
+
+```mermaid
+sequenceDiagram
+    participant User1
+    participant Backend
+    participant Appwrite
+    participant User2
+    
+    User1->>Backend: Send Message (WebSocket)
+    Backend->>Appwrite: Store Message
+    Appwrite-->>Backend: Confirmation
+    Backend->>User2: Deliver Message (WebSocket)
+    Backend->>User1: Sent Confirmation
+    User2->>Backend: Mark as Read
+    Backend->>Appwrite: Update Read Status
+    Backend->>User1: Read Receipt
+```
+
+## Communication Patterns
+
+### REST API
+
+Used for:
+- User authentication
+- Profile management
+- Data querying and pagination
+- File uploads
+- Organization management
+
+**Endpoints:**
+- `GET /v1/user/profile` - Get user data
+- `POST /v1/messages/send` - Send message
+- `GET /v1/conversations/` - List conversations
+- `POST /v1/tasks/create` - Create task
+
+### WebSocket
+
+Used for:
+- Real-time messaging
+- Typing indicators
+- Presence system (online/offline status)
+- Live notifications
+- Message delivery confirmations
+
+**Events:**
+- `MESSAGE` - New message received
+- `SENT` - Message sent confirmation
+- `DELIVERED` - Message delivered to recipients
+- `READED` - Message read by recipient
+- `USER_STATUS` - User online/offline status
+- `TYPING` - Typing indicator
+
+## Security Architecture
+
+### Authentication Flow
+
+```
+1. User logs in with email/password or Google
+   ↓
+2. Appwrite validates credentials
+   ↓
+3. Appwrite issues JWT token
+   ↓
+4. Client stores token securely
+   ↓
+5. Token included in all API requests
+   ↓
+6. Backend validates token with Appwrite
+```
+
+### Authorization Layers
+
+1. **User Authentication** - JWT token validation
+2. **API Scopes** - Fine-grained permissions for API keys
+3. **Resource Ownership** - Users can only access their data
+4. **Organization Isolation** - Data segregation by organization
+
+### API Scope System
+
+```javascript
+{
+  "read:users": "Read user profiles",
+  "write:users": "Create/update users",
+  "read:messages": "Read messages",
+  "write:messages": "Send messages",
+  "read:tasks": "Read tasks",
+  "write:tasks": "Create/update tasks",
+  "generate:api": "Generate API keys",
+  "manage:api": "Manage API keys",
+  "admin:all": "Full admin access"
+}
+```
+
+## Scalability Considerations
+
+### Horizontal Scaling
+
+- **Backend**: Stateless design allows multiple instances
+- **WebSocket**: Use sticky sessions or Redis pub/sub
+- **Database**: Appwrite handles scaling automatically
+
+### Performance Optimizations
+
+1. **Caching**:
+   - Local caching with Isar (mobile)
+   - Memory caching for frequently accessed data
+   - CDN for static assets
+
+2. **Database Indexing**:
+   - Compound indexes on frequently queried fields
+   - Optimized queries with proper filtering
+
+3. **Connection Management**:
+   - WebSocket connection pooling
+   - Automatic reconnection with exponential backoff
+   - Heartbeat mechanism (ping/pong)
+
+4. **Message Delivery**:
+   - Batch processing for bulk operations
+   - Queue system for offline message delivery
+   - Efficient push notification batching
+
+## Offline Support
+
+### Mobile App Strategy
+
+1. **Local-First Architecture**:
+   - All data stored locally in Isar
+   - UI reads from local database
+   - Background sync to server
+
+2. **Sync Mechanism**:
+   - Optimistic updates
+   - Conflict resolution
+   - Delta sync for efficiency
+
+3. **Queue Management**:
+   - Pending message queue
+   - Auto-retry with backoff
+   - Status indicators for users
+
+## Monitoring & Observability
+
+### Key Metrics
+
+- **Backend**:
+  - API response times
+  - WebSocket connection count
+  - Message throughput
+  - Error rates
+
+- **Mobile**:
+  - App crashes
+  - Network errors
+  - Sync performance
+  - Battery usage
+
+### Logging Strategy
+
+- Structured logging with timestamps
+- Error tracking with stack traces
+- Performance monitoring
+- User activity analytics
+
+## Deployment Architecture
+
+### Development Environment
+
+```
+localhost:3000 (Backend API)
+├── REST API endpoints
+└── WebSocket server
+
+Flutter Dev App
+├── Debug mode
+└── Hot reload enabled
+```
+
+### Production Environment
+
+```
+https://api.maneged.com
+├── Load Balancer
+├── API Gateway
+├── Backend Instances (2+)
+└── WebSocket Cluster
+
+Mobile Apps
+├── Play Store (Android)
+├── App Store (iOS)
+└── Auto-update system
+```
+
+## Future Enhancements
+
+<AccordionGroup>
+  <Accordion title="Planned Features">
+    - Video/voice calling with WebRTC
+    - End-to-end encryption
+    - Advanced analytics dashboard
+    - Third-party integrations (Slack, Jira, etc.)
+    - Desktop applications (Windows, macOS, Linux)
+  </Accordion>
+
+  <Accordion title="Scalability Improvements">
+    - Redis for distributed caching
+    - Message queue system (RabbitMQ/Kafka)
+    - Microservices architecture
+    - Database sharding
+    - Edge computing with CDN
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Backend Setup"
+    icon="server"
+    href="/backend/installation"
+  >
+    Set up the backend server
+  </Card>
+  <Card
+    title="Mobile Architecture"
+    icon="mobile"
+    href="/mobile/architecture"
+  >
+    Explore mobile app architecture
+  </Card>
+  <Card
+    title="WebSocket API"
+    icon="bolt"
+    href="/backend/websocket"
+  >
+    Learn about real-time features
+  </Card>
+  <Card
+    title="Security"
+    icon="lock"
+    href="/backend/authentication"
+  >
+    Understand security model
+  </Card>
+</CardGroup>

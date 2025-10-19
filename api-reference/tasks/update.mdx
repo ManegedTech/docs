@@ -1,0 +1,76 @@
+---
+title: 'Update Task'
+api: 'PATCH /v1/tasks/:id'
+description: 'Update an existing task'
+---
+
+## Endpoint
+
+```
+PATCH /v1/tasks/:id
+```
+
+## Authentication
+
+Requires user token with task access or API key with `write:tasks` scope.
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  Task ID
+</ParamField>
+
+## Request Body
+
+<ParamField body="title" type="string">
+  Task title
+</ParamField>
+
+<ParamField body="description" type="string">
+  Task description
+</ParamField>
+
+<ParamField body="due_date" type="string">
+  Due date in ISO 8601 format
+</ParamField>
+
+<ParamField body="priority" type="string">
+  Priority level: "LOW", "MEDIUM", "HIGH", "URGENT"
+</ParamField>
+
+<ParamField body="status" type="string">
+  Task status: "PENDING", "IN_PROGRESS", "COMPLETED"
+</ParamField>
+
+<ParamField body="assigned_to" type="array">
+  Array of user IDs assigned to task
+</ParamField>
+
+## Example Request
+
+```bash
+curl -X PATCH \
+  -H "x-api-key: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "IN_PROGRESS",
+    "priority": "URGENT"
+  }' \
+  https://api.maneged.com/v1/tasks/task-123
+```
+
+## Response
+
+```json
+{
+  "status": 200,
+  "success": true,
+  "data": {
+    "$id": "task-123",
+    "title": "Complete documentation",
+    "status": "IN_PROGRESS",
+    "priority": "URGENT",
+    "updated_at": "2025-01-19T11:00:00.000Z"
+  }
+}
+```

@@ -1,0 +1,579 @@
+---
+title: 'WebSocket API'
+description: 'Real-time communication with WebSocket connections'
+icon: 'bolt'
+---
+
+## Overview
+
+Maneged uses WebSocket connections for real-time bidirectional communication. This enables instant message delivery, typing indicators, presence tracking, and live notifications without polling.
+
+## Connection
+
+### Endpoint
+
+```
+ws://localhost:3000?token=YOUR_JWT_TOKEN
+wss://api.maneged.com?token=YOUR_JWT_TOKEN (production)
+```
+
+### Authentication
+
+Include your JWT token as a query parameter:
+
+```javascript
+const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+const ws = new WebSocket(`ws://localhost:3000?token=${token}`);
+```
+
+<Warning>
+  WebSocket connections require user JWT tokens. API keys are not supported for WebSocket authentication.
+</Warning>
+
+### Connection States
+
+| State | Description |
+|-------|-------------|
+| `CONNECTING` | Initial connection attempt |
+| `OPEN` | Successfully connected and ready |
+| `CLOSING` | Connection is closing |
+| `CLOSED` | Connection closed or failed |
+
+## Message Format
+
+All WebSocket messages use JSON format:
+
+```json
+{
+  "method": "MESSAGE_TYPE",
+  "payload": {},
+  "timestamp": 1234567890
+}
+```
+
+## Client to Server Events
+
+### 1. PONG (Heartbeat Response)
+
+Respond to server PING to maintain connection:
+
+```json
+{
+  "method": "PONG",
+  "timestamp": 1234567890
+}
+```
+
+### 2. SEND (Send Message)
+
+Send a message to other users:
+
+```json
+{
+  "method": "SEND",
+  "collection": "Messages",
+  "id": "unique()",
+  "payload": {
+    "conversation_id": "conv-123",
+    "text": "Hello, world!",
+    "sender_id": "user-123",
+    "sender_name": "John Doe",
+    "message_type": "text",
+    "reciever_ids": ["user-456", "user-789"]
+  }
+}
+```
+
+**Message Types:**
+- `text` - Plain text message
+- `image` - Image attachment
+- `file` - File attachment
+- `system` - System-generated message
+
+### 3. READED (Mark as Read)
+
+Mark a message as read:
+
+```json
+{
+  "method": "READED",
+  "messageId": "msg-123"
+}
+```
+
+### 4. GET_USER_STATUS
+
+Subscribe to a user's status updates:
+
+```json
+{
+  "method": "GET_USER_STATUS",
+  "userId": "user-456"
+}
+```
+
+### 5. UNSUBSCRIBE_USER_STATUS
+
+Unsubscribe from user status updates:
+
+```json
+{
+  "method": "UNSUBSCRIBE_USER_STATUS",
+  "userId": "user-456"
+}
+```
+
+### 6. GET_ONLINE_USERS
+
+Get list of all currently online users:
+
+```json
+{
+  "method": "GET_ONLINE_USERS"
+}
+```
+
+## Server to Client Events
+
+### 1. CONNECTION_CONFIRMED
+
+Sent when connection is successfully established:
+
+```json
+{
+  "method": "CONNECTION_CONFIRMED",
+  "userId": "user-123",
+  "sessionId": "session-abc123",
+  "timestamp": 1234567890
+}
+```
+
+### 2. PING (Heartbeat)
+
+Server ping to check connection health (sent every 30 seconds):
+
+```json
+{
+  "method": "PING",
+  "timestamp": 1234567890
+}
+```
+
+<Note>
+  Clients must respond with PONG within 10 seconds or connection will be terminated.
+</Note>
+
+### 3. MESSAGE
+
+Incoming message from another user:
+
+```json
+{
+  "method": "MESSAGE",
+  "message": {
+    "$id": "msg-123",
+    "conversation_id": "conv-123",
+    "sender_id": "user-456",
+    "sender_name": "Jane Smith",
+    "text": "Hello!",
+    "message_type": "text",
+    "created_at": "2025-01-19T10:00:00.000Z"
+  },
+  "timestamp": 1234567890
+}
+```
+
+### 4. SENT
+
+Confirmation that your message was sent:
+
+```json
+{
+  "method": "SENT",
+  "messagesId": "msg-123",
+  "deliveredTo": 2,
+  "pendingDelivery": 1,
+  "timestamp": 1234567890
+}
+```
+
+### 5. DELIVERED
+
+Confirmation that message was delivered to online users:
+
+```json
+{
+  "method": "DELIVERED",
+  "messagesId": "msg-123",
+  "deliveredTo": ["user-456", "user-789"],
+  "timestamp": 1234567890
+}
+```
+
+### 6. READED
+
+Notification that someone read your message:
+
+```json
+{
+  "method": "READED",
+  "messageId": "msg-123",
+  "readBy": "user-456",
+  "timestamp": 1234567890
+}
+```
+
+### 7. READ_CONFIRMED
+
+Confirmation that you marked a message as read:
+
+```json
+{
+  "method": "READ_CONFIRMED",
+  "messageId": "msg-123",
+  "timestamp": 1234567890
+}
+```
+
+### 8. USER_STATUS
+
+User status update (online/offline):
+
+```json
+{
+  "method": "USER_STATUS",
+  "userId": "user-456",
+  "status": "online",
+  "lastSeen": 1234567890,
+  "timestamp": 1234567890
+}
+```
+
+**Status Values:**
+- `online` - User is currently connected
+- `offline` - User has disconnected
+- `busy` - User is busy
+
+### 9. ONLINE_USERS
+
+List of all currently online users:
+
+```json
+{
+  "method": "ONLINE_USERS",
+  "users": [
+    {
+      "userId": "user-123",
+      "status": "online",
+      "sessions": 2,
+      "lastSeen": 1234567890
+    },
+    {
+      "userId": "user-456",
+      "status": "online",
+      "sessions": 1,
+      "lastSeen": 1234567891
+    }
+  ],
+  "timestamp": 1234567890
+}
+```
+
+## Features
+
+### Multi-Session Support
+
+Users can have multiple connections simultaneously (e.g., phone + tablet):
+
+- Each session is tracked independently
+- User appears "online" if at least one session is active
+- Messages delivered to all active sessions
+
+### Presence Broadcasting
+
+Real-time status updates when users go online/offline:
+
+- Subscription-based model (only get updates for users you're watching)
+- Automatic cleanup when users disconnect
+- Supports "busy" and custom statuses
+
+### Message Delivery Tracking
+
+Comprehensive delivery and read tracking:
+
+1. **SENT** - Message saved and queued
+2. **DELIVERED** - Message received by online users
+3. **READED** - Message read by recipient
+
+For offline users:
+- Push notification sent via FCM
+- Message queued for delivery when they come online
+
+### Connection Health
+
+Automatic connection monitoring:
+
+- Ping/pong heartbeat every 30 seconds
+- Dead connection detection and cleanup
+- Graceful reconnection handling
+- Exponential backoff for reconnection attempts
+
+## Client Implementation
+
+### JavaScript/Node.js Example
+
+```javascript
+class ManegedWebSocket {
+  constructor(token) {
+    this.token = token;
+    this.ws = null;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
+  }
+
+  connect() {
+    this.ws = new WebSocket(`ws://localhost:3000?token=${this.token}`);
+
+    this.ws.onopen = () => {
+      console.log('Connected');
+      this.reconnectAttempts = 0;
+    };
+
+    this.ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      this.handleMessage(data);
+    };
+
+    this.ws.onclose = () => {
+      console.log('Disconnected');
+      this.reconnect();
+    };
+
+    this.ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+  }
+
+  handleMessage(data) {
+    switch(data.method) {
+      case 'PING':
+        this.send({ method: 'PONG', timestamp: Date.now() });
+        break;
+      case 'CONNECTION_CONFIRMED':
+        console.log('Connection confirmed:', data);
+        break;
+      case 'MESSAGE':
+        console.log('New message:', data.message);
+        break;
+      case 'USER_STATUS':
+        console.log('User status changed:', data);
+        break;
+      default:
+        console.log('Unknown message type:', data.method);
+    }
+  }
+
+  send(data) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify(data));
+    }
+  }
+
+  sendMessage(conversationId, text, receiverIds) {
+    this.send({
+      method: 'SEND',
+      collection: 'Messages',
+      id: 'unique()',
+      payload: {
+        conversation_id: conversationId,
+        text: text,
+        message_type: 'text',
+        reciever_ids: receiverIds
+      }
+    });
+  }
+
+  subscribeToUser(userId) {
+    this.send({
+      method: 'GET_USER_STATUS',
+      userId: userId
+    });
+  }
+
+  markAsRead(messageId) {
+    this.send({
+      method: 'READED',
+      messageId: messageId
+    });
+  }
+
+  reconnect() {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+      console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
+      setTimeout(() => this.connect(), delay);
+    }
+  }
+
+  disconnect() {
+    if (this.ws) {
+      this.ws.close();
+    }
+  }
+}
+
+// Usage
+const ws = new ManegedWebSocket('YOUR_JWT_TOKEN');
+ws.connect();
+```
+
+### Flutter Example
+
+```dart
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'dart:convert';
+
+class WebSocketService {
+  WebSocketChannel? _channel;
+  final String token;
+  
+  WebSocketService(this.token);
+
+  void connect() {
+    _channel = WebSocketChannel.connect(
+      Uri.parse('ws://localhost:3000?token=$token'),
+    );
+
+    _channel!.stream.listen(
+      (message) {
+        final data = json.decode(message);
+        _handleMessage(data);
+      },
+      onError: (error) {
+        print('WebSocket error: $error');
+      },
+      onDone: () {
+        print('WebSocket closed');
+        _reconnect();
+      },
+    );
+  }
+
+  void _handleMessage(Map<String, dynamic> data) {
+    switch (data['method']) {
+      case 'PING':
+        send({'method': 'PONG', 'timestamp': DateTime.now().millisecondsSinceEpoch});
+        break;
+      case 'MESSAGE':
+        print('New message: ${data['message']}');
+        break;
+      case 'USER_STATUS':
+        print('User status changed: ${data['userId']} is ${data['status']}');
+        break;
+    }
+  }
+
+  void send(Map<String, dynamic> data) {
+    if (_channel != null) {
+      _channel!.sink.add(json.encode(data));
+    }
+  }
+
+  void sendMessage(String conversationId, String text, List<String> receiverIds) {
+    send({
+      'method': 'SEND',
+      'collection': 'Messages',
+      'id': 'unique()',
+      'payload': {
+        'conversation_id': conversationId,
+        'text': text,
+        'message_type': 'text',
+        'reciever_ids': receiverIds,
+      }
+    });
+  }
+
+  void disconnect() {
+    _channel?.sink.close();
+  }
+
+  void _reconnect() {
+    Future.delayed(Duration(seconds: 5), () {
+      connect();
+    });
+  }
+}
+```
+
+## Error Codes
+
+| Code | Description |
+|------|-------------|
+| `1008` | Authentication failed or token missing |
+| `4000` | User not authenticated |
+| `4001` | Message validation failed |
+| `4002` | Insufficient permissions |
+| `5000` | Internal server error |
+
+## Best Practices
+
+<Steps>
+  <Step title="Implement Reconnection Logic">
+    Always implement exponential backoff for reconnection attempts
+  </Step>
+  <Step title="Handle Heartbeats">
+    Respond to PING messages promptly to maintain connection
+  </Step>
+  <Step title="Cache Locally">
+    Cache user statuses and messages locally for performance
+  </Step>
+  <Step title="Subscribe Selectively">
+    Only subscribe to users you need to monitor to reduce overhead
+  </Step>
+  <Step title="Clean Up">
+    Unsubscribe and close connections when no longer needed
+  </Step>
+</Steps>
+
+## Testing
+
+Use the built-in test client at `http://localhost:3000/docs.html` to:
+
+- Test WebSocket connections
+- Send test messages
+- Monitor connection status
+- View real-time events
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Messages API"
+    icon="message"
+    href="/api-reference/messages/send"
+  >
+    REST API for messages
+  </Card>
+  <Card
+    title="WebSocket Events Reference"
+    icon="list"
+    href="/api-reference/websocket/messages"
+  >
+    Complete event documentation
+  </Card>
+  <Card
+    title="Mobile Integration"
+    icon="mobile"
+    href="/mobile/features"
+  >
+    Integrate WebSocket in Flutter
+  </Card>
+  <Card
+    title="Authentication"
+    icon="lock"
+    href="/backend/authentication"
+  >
+    Get JWT tokens for WebSocket
+  </Card>
+</CardGroup>

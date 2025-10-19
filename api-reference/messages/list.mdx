@@ -1,0 +1,68 @@
+---
+title: 'List Messages'
+api: 'GET /v1/message'
+description: 'Get messages from a conversation'
+---
+
+## Endpoint
+
+```
+GET /v1/message
+```
+
+## Authentication
+
+Requires user token with conversation access or API key with `read:messages` scope.
+
+## Query Parameters
+
+<ParamField query="conversationId" type="string" required>
+  Conversation ID
+</ParamField>
+
+<ParamField query="limit" type="number">
+  Number of messages (default: 25, max: 100)
+</ParamField>
+
+<ParamField query="offset" type="number">
+  Pagination offset (default: 0)
+</ParamField>
+
+<ParamField query="before" type="string">
+  Get messages before this timestamp
+</ParamField>
+
+## Example Request
+
+```bash
+curl -X GET \
+  -H "x-api-key: Bearer YOUR_TOKEN" \
+  "https://api.maneged.com/v1/message?conversationId=conv-123&limit=50"
+```
+
+## Response
+
+```json
+{
+  "status": 200,
+  "success": true,
+  "data": {
+    "messages": [
+      {
+        "$id": "msg-789",
+        "conversation": "conv-123",
+        "message": "Hello there!",
+        "sender": {
+          "$id": "user-123",
+          "name": "John Doe"
+        },
+        "created_at": "2025-01-19T10:00:00.000Z",
+        "status": "DELIVERED",
+        "reactions": []
+      }
+    ],
+    "total": 1,
+    "has_more": false
+  }
+}
+```

@@ -1,0 +1,54 @@
+---
+title: 'Search Organizations'
+api: 'GET /v1/organization/search'
+description: 'Search for public organizations'
+---
+
+## Endpoint
+
+```
+GET /v1/organization/search
+```
+
+## Authentication
+
+Requires user token or API key with `read:organizations` scope.
+
+## Query Parameters
+
+<ParamField query="q" type="string" required>
+  Search query (organization name)
+</ParamField>
+
+<ParamField query="limit" type="number">
+  Number of results (default: 25, max: 100)
+</ParamField>
+
+## Example Request
+
+```bash
+curl -X GET \
+  -H "x-api-key: Bearer YOUR_TOKEN" \
+  "https://api.maneged.com/v1/organization/search?q=tech&limit=10"
+```
+
+## Response
+
+```json
+{
+  "status": 200,
+  "success": true,
+  "data": {
+    "results": [
+      {
+        "$id": "org-123",
+        "name": "Tech Company",
+        "description": "A technology company",
+        "is_public": true,
+        "member_count": 50
+      }
+    ],
+    "total": 1
+  }
+}
+```

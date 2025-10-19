@@ -1,0 +1,281 @@
+---
+title: 'Message Events'
+description: 'Real-time messaging events via WebSocket'
+---
+
+## Message Events
+
+Handle real-time message delivery, read receipts, and reactions.
+
+### Send Message
+
+Send a new message via WebSocket.
+
+**Client sends:**
+```json
+{
+  "type": "SEND",
+  "data": {
+    "conversation": "conv-123",
+    "message": "Hello there!",
+    "client_id": "temp-msg-123",
+    "reply_to": "msg-456"
+  }
+}
+```
+
+**Server responds to sender:**
+```json
+{
+  "type": "SENT",
+  "data": {
+    "client_id": "temp-msg-123",
+    "message_id": "msg-789",
+    "timestamp": "2025-01-19T10:00:00.000Z"
+  }
+}
+```
+
+**All participants receive:**
+```json
+{
+  "type": "MESSAGE",
+  "data": {
+    "$id": "msg-789",
+    "conversation": "conv-123",
+    "message": "Hello there!",
+    "sender": {
+      "$id": "user-123",
+      "name": "John Doe"
+    },
+    "reply_to": "msg-456",
+    "created_at": "2025-01-19T10:00:00.000Z"
+  }
+}
+```
+
+<Note>
+  Use `client_id` to track optimistic message updates in your UI.
+</Note>
+
+## Delivery & Read Receipts
+
+### Message Delivered
+
+Sent when message is delivered to recipient.
+
+```json
+{
+  "type": "DELIVERED",
+  "data": {
+    "message_id": "msg-789",
+    "conversation": "conv-123",
+    "user_id": "user-456",
+    "timestamp": "2025-01-19T10:00:05.000Z"
+  }
+}
+```
+
+### Mark as Read
+
+**Client sends:**
+```json
+{
+  "type": "READED",
+  "data": {
+    "conversation": "conv-123",
+    "message_ids": ["msg-789", "msg-790"]
+  }
+}
+```
+
+**Other participants receive:**
+```json
+{
+  "type": "READED",
+  "data": {
+    "conversation": "conv-123",
+    "message_ids": ["msg-789", "msg-790"],
+    "user_id": "user-456",
+    "timestamp": "2025-01-19T10:01:00.000Z"
+  }
+}
+```
+
+## Reactions
+
+### Add Reaction
+
+**Client sends:**
+```json
+{
+  "type": "ADD_REACTION",
+  "data": {
+    "message_id": "msg-789",
+    "reaction": "👍"
+  }
+}
+```
+
+**All participants receive:**
+```json
+{
+  "type": "REACTION_ADDED",
+  "data": {
+    "message_id": "msg-789",
+    "reaction": {
+      "$id": "reaction-123",
+      "user_id": "user-456",
+      "reaction": "👍",
+      "created_at": "2025-01-19T10:02:00.000Z"
+    }
+  }
+}
+```
+
+### Remove Reaction
+
+**Client sends:**
+```json
+{
+  "type": "REMOVE_REACTION",
+  "data": {
+    "reaction_id": "reaction-123"
+  }
+}
+```
+
+**All participants receive:**
+```json
+{
+  "type": "REACTION_REMOVED",
+  "data": {
+    "message_id": "msg-789",
+    "reaction_id": "reaction-123",
+    "user_id": "user-456"
+  }
+}
+```
+
+## Message Deletion
+
+### Delete Message
+
+**Client sends:**
+```json
+{
+  "type": "DELETE_MESSAGE",
+  "data": {
+    "message_id": "msg-789"
+  }
+}
+```
+
+**All participants receive:**
+```json
+{
+  "type": "MESSAGE_DELETED",
+  "data": {
+    "message_id": "msg-789",
+    "conversation": "conv-123",
+    "deleted_by": "user-123",
+    "timestamp": "2025-01-19T10:03:00.000Z"
+  }
+}
+```
+
+## Example Implementation
+
+<CodeGroup>
+```javascript JavaScript
+class MessageService {
+  constructor(ws) {
+    this.ws = ws;
+    this.pendingMessages = new Map();
+  }
+  
+  sendMessage(conversation, message) {
+    const clientId = `temp-${Date.now()}`;
+    
+    this.pendingMessages.set(clientId, {
+      conversation,
+      message,
+      status: 'pending'
+    });
+    
+    this.ws.send(JSON.stringify({
+      type: 'SEND',
+      data: { conversation, message, client_id: clientId }
+    }));
+    
+    return clientId;
+  }
+  
+  onSent(data) {
+    const pending = this.pendingMessages.get(data.client_id);
+    if (pending) {
+      pending.status = 'sent';
+      pending.message_id = data.message_id;
+      this.pendingMessages.delete(data.client_id);
+    }
+  }
+}
+```
+
+```dart Flutter
+class WebSocketService {
+  final WebSocketChannel channel;
+  final StreamController<Message> _messageController = StreamController.broadcast();
+  
+  Stream<Message> get messages => _messageController.stream;
+  
+  void sendMessage(String conversationId, String text) {
+    final clientId = 'temp-${DateTime.now().millisecondsSinceEpoch}';
+    
+    channel.sink.add(jsonEncode({
+      'type': 'SEND',
+      'data': {
+        'conversation': conversationId,
+        'message': text,
+        'client_id': clientId,
+      }
+    }));
+  }
+  
+  void markAsRead(String conversationId, List<String> messageIds) {
+    channel.sink.add(jsonEncode({
+      'type': 'READED',
+      'data': {
+        'conversation': conversationId,
+        'message_ids': messageIds,
+      }
+    }));
+  }
+}
+```
+</CodeGroup>
+
+## Error Handling
+
+Common errors and their handling:
+
+```json
+{
+  "type": "ERROR",
+  "data": {
+    "client_id": "temp-msg-123",
+    "code": "SEND_FAILED",
+    "message": "Failed to send message"
+  }
+}
+```
+
+Error codes:
+- `SEND_FAILED` - Message could not be sent
+- `INVALID_CONVERSATION` - Conversation doesn't exist
+- `PERMISSION_DENIED` - User doesn't have access
+- `RATE_LIMIT` - Too many messages sent
+
+<Tip>
+  Implement retry logic with exponential backoff for failed messages.
+</Tip>

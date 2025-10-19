@@ -1,0 +1,101 @@
+---
+title: 'Get User Profile'
+api: 'GET /v1/user/profile'
+description: 'Get user profile information'
+---
+
+## Endpoint
+
+```
+GET /v1/user/profile
+```
+
+## Authentication
+
+Requires user token or API key with `read:users` scope.
+
+## Query Parameters
+
+<ParamField query="userId" type="string">
+  User ID to fetch profile for. Omit to get current user's profile.
+</ParamField>
+
+## Response
+
+<ResponseField name="status" type="number">
+  HTTP status code (200 for success)
+</ResponseField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request was successful
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  User profile data
+  <Expandable title="User Object">
+    <ResponseField name="$id" type="string">
+      User ID
+    </ResponseField>
+    <ResponseField name="name" type="string">
+      User's full name
+    </ResponseField>
+    <ResponseField name="email" type="string">
+      User's email address
+    </ResponseField>
+    <ResponseField name="avatar_url" type="string">
+      Profile picture URL
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      User status (online, offline, busy)
+    </ResponseField>
+    <ResponseField name="last_seen" type="datetime">
+      Last activity timestamp
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X GET \
+  -H "x-api-key: Bearer YOUR_TOKEN" \
+  https://api.maneged.com/v1/user/profile
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.maneged.com/v1/user/profile', {
+  headers: {
+    'x-api-key': 'Bearer YOUR_TOKEN'
+  }
+});
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.maneged.com/v1/user/profile',
+    headers={'x-api-key': 'Bearer YOUR_TOKEN'}
+)
+data = response.json()
+```
+</CodeGroup>
+
+## Example Response
+
+```json
+{
+  "status": 200,
+  "success": true,
+  "data": {
+    "$id": "user-123",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "avatar_url": "https://example.com/avatar.jpg",
+    "status": "online",
+    "last_seen": "2025-01-19T10:00:00.000Z"
+  }
+}
+```

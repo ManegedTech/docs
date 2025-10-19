@@ -1,0 +1,455 @@
+---
+title: 'Backend Installation'
+description: 'Step-by-step guide to install and configure the Maneged backend server'
+icon: 'download'
+---
+
+## Prerequisites
+
+Before installing the Maneged backend, ensure you have the following:
+
+<CardGroup cols={2}>
+  <Card title="Node.js 16+" icon="node-js">
+    Download from [nodejs.org](https://nodejs.org/)
+  </Card>
+  <Card title="npm or yarn" icon="box">
+    Package manager (comes with Node.js)
+  </Card>
+  <Card title="Git" icon="git">
+    Version control system
+  </Card>
+  <Card title="Appwrite Account" icon="database">
+    Sign up at [cloud.appwrite.io](https://cloud.appwrite.io/)
+  </Card>
+</CardGroup>
+
+## Installation Steps
+
+### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/manegedtech/Maneged_Socket.git
+cd Maneged_Socket
+```
+
+### Step 2: Install Dependencies
+
+```bash
+npm install
+```
+
+This will install all required packages:
+- `express` - Web framework
+- `ws` - WebSocket library
+- `node-appwrite` - Appwrite SDK
+- `dotenv` - Environment variables
+- `multer` - File upload handling
+
+### Step 3: Set Up Appwrite
+
+#### Create Appwrite Project
+
+1. Go to [Appwrite Console](https://cloud.appwrite.io/console)
+2. Click "Create Project"
+3. Name your project (e.g., "Maneged")
+4. Copy the Project ID
+
+#### Create API Key
+
+1. Navigate to "Settings" → "API Keys"
+2. Click "Add API Key"
+3. Name it "Backend Server"
+4. Set scopes:
+   - `databases.*`
+   - `users.read`
+   - `users.write`
+   - `files.*`
+5. Copy the API Key (save it securely!)
+
+#### Create Database Collections
+
+Create the following collections in your Appwrite database:
+
+<AccordionGroup>
+  <Accordion title="users collection">
+    **Attributes:**
+    - `user_id` (String, required, unique)
+    - `name` (String, required)
+    - `email` (String, required, unique)
+    - `avatar_url` (URL)
+    - `status` (String) - online/offline/busy
+    - `last_seen` (DateTime)
+    - `organization` (Relationship to organizations)
+    
+    **Indexes:**
+    - `email` (unique)
+    - `last_seen`
+  </Accordion>
+
+  <Accordion title="organizations collection">
+    **Attributes:**
+    - `name` (String, required)
+    - `description` (String)
+    - `code` (String, unique) - join code
+    - `owner_id` (String, required)
+    - `member_ids` (Array)
+    - `is_public` (Boolean)
+    
+    **Indexes:**
+    - `code` (unique)
+    - `owner_id`
+  </Accordion>
+
+  <Accordion title="conversations collection">
+    **Attributes:**
+    - `type` (String, required) - individual/group/team
+    - `name` (String)
+    - `participant_ids` (Array, required)
+    - `admin_ids` (Array)
+    - `organization_id` (String)
+    - `last_message_at` (DateTime)
+    - `created_by` (String, required)
+    
+    **Indexes:**
+    - `participant_ids`
+    - `last_message_at`
+    - `organization_id`
+  </Accordion>
+
+  <Accordion title="messages collection">
+    **Attributes:**
+    - `conversation_id` (String, required)
+    - `sender_id` (String, required)
+    - `sender_name` (String, required)
+    - `text` (String)
+    - `message_type` (String) - text/image/file
+    - `attachment_url` (URL)
+    - `reply_to_message_id` (String)
+    - `is_edited` (Boolean)
+    - `is_deleted` (Boolean)
+    
+    **Indexes:**
+    - `conversation_id`
+    - `sender_id`
+    - `created_at`
+  </Accordion>
+
+  <Accordion title="message_reactions collection">
+    **Attributes:**
+    - `message_id` (String, required)
+    - `user_id` (String, required)
+    - `emoji` (String, required)
+    
+    **Indexes:**
+    - `message_id`
+    - Compound: `message_id` + `user_id` + `emoji` (unique)
+  </Accordion>
+
+  <Accordion title="tasks collection">
+    **Attributes:**
+    - `title` (String, required)
+    - `description` (String)
+    - `assignee_id` (String)
+    - `organization_id` (String, required)
+    - `status` (String) - open/in_progress/completed
+    - `priority` (String) - low/medium/high
+    - `due_date` (DateTime)
+    
+    **Indexes:**
+    - `assignee_id`
+    - `organization_id`
+    - `status`
+    - `due_date`
+  </Accordion>
+
+  <Accordion title="actions collection">
+    **Attributes:**
+    - `user_id` (String, required)
+    - `type` (String, required)
+    - `title` (String, required)
+    - `message` (String)
+    - `related_id` (String)
+    - `is_read` (Boolean)
+    
+    **Indexes:**
+    - `user_id`
+    - `is_read`
+    - `created_at`
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  You can use the Appwrite console to create these collections manually, or use the Appwrite CLI for automation.
+</Tip>
+
+### Step 4: Configure Environment Variables
+
+Create a `.env` file in the project root:
+
+```bash
+# Appwrite Configuration
+APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+APPWRITE_PROJECT_ID=your_project_id_here
+APPWRITE_API_KEY=your_api_key_here
+APPWRITE_DATABASE_ID=your_database_id_here
+
+# Collection IDs
+COLLECTION_USERS=users
+COLLECTION_MESSAGES=messages
+COLLECTION_CONVERSATIONS=conversations
+COLLECTION_ORGANIZATIONS=organizations
+COLLECTION_TASKS=tasks
+COLLECTION_MESSAGE_REACTIONS=message_reactions
+COLLECTION_ACTIONS=actions
+
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# Firebase Admin SDK (for push notifications)
+FIREBASE_SERVICE_ACCOUNT_PATH=./firebase-admin-sdk.json
+```
+
+<Warning>
+  Never commit your `.env` file to version control! Make sure it's in your `.gitignore`.
+</Warning>
+
+### Step 5: Set Up Firebase (Optional)
+
+Firebase is required for push notifications to offline users.
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create a new project or use existing
+3. Navigate to Project Settings → Service Accounts
+4. Click "Generate New Private Key"
+5. Save the JSON file as `firebase-admin-sdk.json` in project root
+
+### Step 6: Start the Server
+
+#### Development Mode
+
+```bash
+npm start
+```
+
+The server will start on `http://localhost:3000`
+
+#### Production Mode
+
+```bash
+NODE_ENV=production npm start
+```
+
+### Step 7: Verify Installation
+
+Test the server is running:
+
+```bash
+curl http://localhost:3000/health
+```
+
+Expected response:
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-01-19T10:00:00.000Z",
+  "version": "1.0.0"
+}
+```
+
+## Configuration Options
+
+### Port Configuration
+
+Change the default port in `.env`:
+
+```bash
+PORT=5000
+```
+
+### CORS Configuration
+
+Edit `src/app.js` to configure CORS:
+
+```javascript
+app.use(cors({
+  origin: ['http://localhost:3000', 'https://yourdomain.com'],
+  credentials: true
+}));
+```
+
+### WebSocket Configuration
+
+Configure WebSocket options in `src/index.js`:
+
+```javascript
+const wss = new WebSocketServer({
+  server,
+  path: '/ws',
+  perMessageDeflate: true,
+  clientTracking: true
+});
+```
+
+## Running with PM2 (Production)
+
+For production deployments, use PM2 for process management:
+
+### Install PM2
+
+```bash
+npm install -g pm2
+```
+
+### Start with PM2
+
+```bash
+pm2 start src/index.js --name maneged-backend
+```
+
+### Configure Auto-Restart
+
+```bash
+pm2 startup
+pm2 save
+```
+
+### Monitor
+
+```bash
+pm2 monit
+pm2 logs maneged-backend
+```
+
+## Docker Installation (Alternative)
+
+### Using Docker Compose
+
+Create `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+services:
+  backend:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - APPWRITE_ENDPOINT=${APPWRITE_ENDPOINT}
+      - APPWRITE_PROJECT_ID=${APPWRITE_PROJECT_ID}
+      - APPWRITE_API_KEY=${APPWRITE_API_KEY}
+      - APPWRITE_DATABASE_ID=${APPWRITE_DATABASE_ID}
+    volumes:
+      - ./firebase-admin-sdk.json:/app/firebase-admin-sdk.json
+    restart: unless-stopped
+```
+
+Create `Dockerfile`:
+
+```dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install --production
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+```
+
+### Run with Docker
+
+```bash
+docker-compose up -d
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Port already in use">
+    **Solution**: Change the port in `.env` or kill the process using port 3000:
+    ```bash
+    # Find process
+    lsof -i :3000
+    # Kill process
+    kill -9 <PID>
+    ```
+  </Accordion>
+
+  <Accordion title="Appwrite connection fails">
+    **Solution**: 
+    - Verify Appwrite endpoint URL
+    - Check project ID is correct
+    - Ensure API key has proper permissions
+    - Check network/firewall settings
+  </Accordion>
+
+  <Accordion title="Module not found errors">
+    **Solution**: 
+    ```bash
+    rm -rf node_modules package-lock.json
+    npm install
+    ```
+  </Accordion>
+
+  <Accordion title="WebSocket connection issues">
+    **Solution**:
+    - Check firewall allows WebSocket connections
+    - Verify no proxy blocking WebSocket
+    - Ensure client uses correct WebSocket URL
+    - Check for CORS issues
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Authentication Setup"
+    icon="lock"
+    href="/backend/authentication"
+  >
+    Configure authentication and API keys
+  </Card>
+  <Card
+    title="WebSocket API"
+    icon="bolt"
+    href="/backend/websocket"
+  >
+    Learn about real-time features
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/introduction"
+  >
+    Explore all API endpoints
+  </Card>
+  <Card
+    title="Mobile Setup"
+    icon="mobile"
+    href="/mobile/installation"
+  >
+    Install the mobile app
+  </Card>
+</CardGroup>
+
+## Production Checklist
+
+Before deploying to production:
+
+- [ ] Update all environment variables with production values
+- [ ] Enable HTTPS/WSS
+- [ ] Configure proper CORS policies
+- [ ] Set up database backups
+- [ ] Configure monitoring and logging
+- [ ] Set up error tracking (Sentry, etc.)
+- [ ] Enable rate limiting
+- [ ] Review security headers
+- [ ] Set up CI/CD pipeline
+- [ ] Configure load balancer
+- [ ] Test failover scenarios

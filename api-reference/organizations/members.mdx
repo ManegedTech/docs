@@ -1,0 +1,50 @@
+---
+title: 'Get Organization Members'
+api: 'GET /v1/organization/members'
+description: 'Get all members of an organization'
+---
+
+## Endpoint
+
+```
+GET /v1/organization/members
+```
+
+## Authentication
+
+Requires user token with organization access.
+
+## Query Parameters
+
+<ParamField query="organizationId" type="string" required>
+  Organization ID
+</ParamField>
+
+## Example Request
+
+```bash
+curl -X GET \
+  -H "x-api-key: Bearer YOUR_TOKEN" \
+  "https://api.maneged.com/v1/organization/members?organizationId=org-123"
+```
+
+## Response
+
+```json
+{
+  "status": 200,
+  "success": true,
+  "data": {
+    "members": [
+      {
+        "$id": "user-123",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "role": "admin",
+        "joined_at": "2025-01-01T00:00:00.000Z"
+      }
+    ],
+    "total": 1
+  }
+}
+```

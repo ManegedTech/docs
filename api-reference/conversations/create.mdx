@@ -1,0 +1,77 @@
+---
+title: 'Create Conversation'
+api: 'POST /v1/conversation/create'
+description: 'Create a new conversation'
+---
+
+## Endpoint
+
+```
+POST /v1/conversation/create
+```
+
+## Authentication
+
+Requires user token or API key with `write:conversations` scope.
+
+## Request Body
+
+<ParamField body="type" type="string" required>
+  Conversation type: "INDIVIDUAL" or "GROUP"
+</ParamField>
+
+<ParamField body="participants" type="array" required>
+  Array of user IDs to include in conversation
+</ParamField>
+
+<ParamField body="name" type="string">
+  Conversation name (required for GROUP)
+</ParamField>
+
+<ParamField body="organizationId" type="string">
+  Organization ID for team conversations
+</ParamField>
+
+## Example Request
+
+<CodeGroup>
+```bash Individual Chat
+curl -X POST \
+  -H "x-api-key: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "INDIVIDUAL",
+    "participants": ["user-456"]
+  }' \
+  https://api.maneged.com/v1/conversation/create
+```
+
+```bash Group Chat
+curl -X POST \
+  -H "x-api-key: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "GROUP",
+    "name": "Team Discussion",
+    "participants": ["user-456", "user-789"]
+  }' \
+  https://api.maneged.com/v1/conversation/create
+```
+</CodeGroup>
+
+## Response
+
+```json
+{
+  "status": 201,
+  "success": true,
+  "data": {
+    "$id": "conv-123",
+    "type": "GROUP",
+    "name": "Team Discussion",
+    "participants": ["user-123", "user-456", "user-789"],
+    "created_by": "user-123",
+    "created_at": "2025-01-19T10:00:00.000Z"
+  }
+}
+```

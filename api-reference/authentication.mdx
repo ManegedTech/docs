@@ -1,0 +1,41 @@
+---
+title: 'Authentication Overview'
+description: 'API authentication methods and best practices'
+icon: 'lock'
+---
+
+## Authentication Methods
+
+Maneged API supports two authentication methods:
+
+1. **User JWT Tokens** - Full access based on user permissions
+2. **API Keys** - Scoped access with fine-grained permissions
+
+## Using JWT Tokens
+
+Include in the `x-api-key` header with `Bearer` prefix:
+
+```bash
+curl -H "x-api-key: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+     https://api.maneged.com/v1/user/profile
+```
+
+## Using API Keys
+
+Include API key directly in the `x-api-key` header:
+
+```bash
+curl -H "x-api-key: mg-abc123def456" \
+     https://api.maneged.com/v1/tasks/
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Full Auth Guide" icon="book" href="/backend/authentication">
+    Complete authentication documentation
+  </Card>
+  <Card title="API Keys" icon="key" href="/backend/authentication#api-key-system">
+    Manage API keys
+  </Card>
+</CardGroup>
